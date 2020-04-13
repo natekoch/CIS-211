@@ -84,7 +84,7 @@ class Board(GameElement):
                 row_tiles.append(None)
             self.tiles.append(row_tiles)
 
-    def __getitem__(self, pos: Vec) -> Tile:
+    def __getitem__(self, pos: Vec) -> Optional[Tile]:
         return self.tiles[pos.x][pos.y]
     
     def __setitem__(self, pos: Vec, tile: Tile):
@@ -96,16 +96,23 @@ class Board(GameElement):
         empties = []
         for row in range(len(self.tiles)):
             for col in range(len(self.tiles[row])):
-                empties.append(Vec(row, col))
+                if self.tiles[row][col] is None:
+                    empties.append(Vec(row, col))
         return empties
             
     def has_empty(self) -> bool:
-        """Is there at least one grid element without a tile?"""
+        """Is there at least one grid element without a tile?
         for row in range(len(self.tiles)):
             for col in range(len(self.tiles[row])):
                 if self.tiles[row][col] is None:
                     return True
         return False
+        """
+        empties = self._empty_positions()
+        if len(empties) > 0:
+            return True
+        else:
+            return False
         # Should return True if there is some element with value None
 
     def to_list(self) -> List[List[int]]:
