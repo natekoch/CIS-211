@@ -56,11 +56,13 @@ class Tile(GameElement):
         return self.value == other.value
 
     def move_to(self, new_pos: Vec):
+        """Updates the positon of the tile and notifies all of its new position"""
         self.row = new_pos.x
         self.col = new_pos.y
         self.notify_all(GameEvent(EventKind.tile_updated, self))
     
     def merge(self, other: "Tile"):
+        """Merges two tiles together and adds their values together to make one tile"""
         # This tile incorporates the value of the other tile
         self.value = self.value + other.value
         self.notify_all(GameEvent(EventKind.tile_updated, self))
@@ -183,6 +185,7 @@ class Board(GameElement):
             pos = new_pos
 
     def _move_tile(self, old_pos: Vec, new_pos: Vec):
+        """Moves the tile on the board to its new positions calls Tile.move_to"""
         tile = self.tiles[old_pos.x][old_pos.y]
         tile.move_to(new_pos)
         self.tiles[new_pos.x][new_pos.y] = tile
