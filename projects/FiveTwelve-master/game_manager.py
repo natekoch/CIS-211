@@ -19,7 +19,7 @@ def main():
     # Handle control component responsibility here
     commands = keypress.Command(game_view)
 
-    # FIXME: We will change this to 
+    # : We will change this to 
     #  grid.place_tile(value=2) after
     #  creating the keyword argument in model.py
     grid.place_tile()
@@ -39,6 +39,7 @@ def main():
             grid.down()
         elif cmd == keypress.CLOSE:
             # Ended game by closing window
+            print(grid.tiles)
             print(f"Your score: {grid.score()}")
             sys.exit(0)
         else: 
