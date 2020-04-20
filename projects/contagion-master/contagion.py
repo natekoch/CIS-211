@@ -21,7 +21,7 @@ def cli() -> object:
     parser = argparse.ArgumentParser(
         description="Contagion, a simple model of disease spread")
     parser.add_argument("conf", nargs="?",
-                        default="contagion.ini")
+                        default="projects/contagion-master/contagion.ini")
     return parser.parse_args()
 
 
