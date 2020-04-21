@@ -17,7 +17,7 @@ class Listenable:
 
 class Press(Listenable):
 
-    def __init__(self)
+    def __init__(self):
         super().__init__()
 
     def lmk(self):
