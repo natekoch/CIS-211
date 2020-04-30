@@ -50,6 +50,3 @@ def read(f: Union[IOBase, str],
     board.set_tiles(values)
     f.close()
     return board
-
-
-
