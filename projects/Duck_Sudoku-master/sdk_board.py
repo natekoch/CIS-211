@@ -249,7 +249,7 @@ class Board(object):
                 if self.solve(): 
                     return True
                 else: 
-                    self.tiles = save_state
+                    self.set_tiles(save_state)
         # Tried all the possibilities; none worked 
         return False
         
