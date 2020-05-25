@@ -10,7 +10,6 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["projects/DM2019W-master/programs/max.obj", "-d","-s"],
             "console": "integratedTerminal",
         }
     ]
