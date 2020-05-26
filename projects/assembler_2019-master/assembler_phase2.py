@@ -303,7 +303,6 @@ def cli() -> object:
     args = parser.parse_args()
     return args
 
-
 def main():
     """"Assemble a Duck Machine program"""
     args = cli()
@@ -316,4 +315,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
