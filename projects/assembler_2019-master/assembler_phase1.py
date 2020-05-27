@@ -142,6 +142,8 @@ class AsmSrcKind(Enum):
     # parts.
     MEMOP = auto()
 
+    JUMP = auto()
+
 # Lines that contain only a comment (and possibly a label).
 # This includes blank lines and labels on a line by themselves.
 #
@@ -231,11 +233,31 @@ ASM_MEMOP_PAT = re.compile(r"""
    \s*$             
    """, re.VERBOSE)
 
+ASM_JUMP_PAT = re.compile(r"""
+    \s*
+   # Optional label 
+   (
+     (?P<label> [a-zA-Z]\w*):
+   )?
+    \s*
+        (JUMP) #Opcode section
+        (/ (?P<predicate> [A-Z]+) )?
+    \s+
+        (?P<labelref> [a-zA-Z]\w*)
+    # Optional comment follows # or ; 
+    (
+    \s*
+        (?P<comment>[\#;].*)
+    )?       
+    \s*$ 
+""", re.VERBOSE)
+
 
 PATTERNS = [(ASM_FULL_PAT, AsmSrcKind.FULL),
             (ASM_DATA_PAT, AsmSrcKind.DATA),
             (ASM_COMMENT_PAT, AsmSrcKind.COMMENT),
-            (ASM_MEMOP_PAT, AsmSrcKind.MEMOP)
+            (ASM_MEMOP_PAT, AsmSrcKind.MEMOP),
+            (ASM_JUMP_PAT, AsmSrcKind.JUMP)
             ]
 
 def parse_line(line: str) -> dict:
@@ -299,18 +321,9 @@ def resolve(lines: List[str]) -> Dict[str, int]:
         log.debug("Processing line {}: {}".format(lnum, line))
         try: 
             fields = parse_line(line)
-            if fields["kind"] == AsmSrcKind.COMMENT:
-                log.debug("Comment")
+            if fields["label"] is not None:
                 labels[fields["label"]] = address
-            elif fields["kind"] == AsmSrcKind.FULL:
-                labels[fields["label"]] = address
-                address += 1
-            elif fields["kind"] == AsmSrcKind.DATA:
-                labels[fields["label"]] = address
-                address += 1
-            #FIXME:
-            elif fields["kind"] == AsmSrcKind.MEMOP:
-                labels[fields["label"]] = address
+            if fields["kind"] != AsmSrcKind.COMMENT:
                 address += 1
         except Exception:
             # Just ignore errors here; they will be handled in
@@ -350,8 +363,7 @@ def transform(lines: List[str]) -> List[str]:
                 log.debug("Passing through FULL instruction")
                 transformed.append(line)
             elif fields["kind"] == AsmSrcKind.DATA:
-                word = value_parse(fields["value"])
-                transformed.append(word)
+                transformed.append(line)
             elif fields["kind"] == AsmSrcKind.MEMOP:
                 fields = fix_optional_fields(fields)
                 ref = fields["labelref"]
@@ -360,6 +372,16 @@ def transform(lines: List[str]) -> List[str]:
                 f = fields
                 full = (f"{f['label']}   {f['opcode']}{f['predicate']} " +
                     f" {f['target']},r0,r15[{pc_relative}] #{ref} " +
+                    f" {f['comment']}")
+                transformed.append(full)
+            elif fields["kind"] == AsmSrcKind.JUMP:
+                fields = fix_optional_fields(fields)
+                ref = fields["labelref"]
+                mem_addr = labels[ref]
+                pc_relative = mem_addr - address
+                f = fields
+                full = (f"{f['label']}   ADD{f['predicate']} " +
+                    f" r15,r0,r15[{pc_relative}] #{ref} " +
                     f" {f['comment']}")
                 transformed.append(full)
             else:
@@ -409,6 +431,7 @@ def squish(s: str) -> str:
     """Discard initial and final spaces and compress 
     all other runs of whitespace to a single space,
     """
+    s = str(s)
     parts = s.strip().split()
     return " ".join(parts)
 

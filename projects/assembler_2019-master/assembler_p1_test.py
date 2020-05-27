@@ -114,5 +114,53 @@ class TestTransformation(unittest.TestCase):
         for i in range(len(expected)):
             self.assertEqual(squish(transformed[i]), squish(expected[i]))
 
+    def test_jump_example(self):
+        """This is the example from the header docstring of transform"""
+        lines = """
+        again: STORE r1,x
+               SUB r1,r0,r0[1]
+               JUMP/P  again
+               HALT  r0,r0,r0
+        x: DATA  0
+        """.split('\n')
+        transformed = transform(lines)
+        expected = """
+        again:  STORE r1,r0,r15[4]   #x
+                SUB   r1,r0,r0[1]
+                ADD/P r15,r0,r15[-2] #again
+                HALT r0,r0,r0
+        x:      DATA 0
+        """.split('\n')
+        self.assertEqual(len(transformed), len(expected))
+        for i in range(len(expected)):
+            self.assertEqual(squish(transformed[i]), squish(expected[i]))
+
+    def test_jump_around(self):
+        """Just a sample loop with an early exit"""
+        lines = """
+        begin: LOAD  r1,x
+        loop:  SUB r1,r1,r0[1]
+               JUMP/Z endloop
+               STORE r1,r0,r0[511]  # print it
+               JUMP loop
+        endloop: 
+                HALT  r0,r0,r0
+        x:      DATA 42
+        """.split("\n")
+        transformed = transform(lines)
+        expected = """
+        begin: LOAD  r1,r0,r15[6] #x
+        loop:  SUB r1,r1,r0[1]
+               ADD/Z  r15,r0,r15[3] #endloop
+               STORE r1,r0,r0[511]  # print it
+               ADD r15,r0,r15[-3] #loop
+        endloop: 
+                HALT  r0,r0,r0
+        x:      DATA 42
+        """.split("\n")
+        self.assertEqual(len(transformed), len(expected))
+        for i in range(len(expected)):
+            self.assertEqual(squish(transformed[i]), squish(expected[i]))
+
 if __name__ == "__main__":
     unittest.main()
